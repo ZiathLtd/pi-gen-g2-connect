@@ -32,7 +32,7 @@ parameters:
 
 jobs:
 - job: BuildPiImage
-
+  timeoutInMinutes: 120
   displayName: Build Pi Image
 
   pool:
