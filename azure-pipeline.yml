@@ -11,7 +11,16 @@ resources:
     source: ZiathLtd.reader-g2-firmware
     trigger: none
 
+variables:
+- group: G2-USER
+
 parameters:
+
+- name: hostname
+  displayName: Hostname
+  type: string
+  default: NO-SERIAL
+
 - name: product
   displayName: Product
   type: string
