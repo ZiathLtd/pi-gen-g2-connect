@@ -11,6 +11,16 @@ resources:
     source: ZiathLtd.reader-g2-firmware
     trigger: none
 
+parameters:
+- name: product
+  displayName: Product
+  type: string
+  default: azenta-core-cube-connect
+  values:
+  - azenta-core-mirage-connect
+  - azenta-core-cube-connect
+  - azenta-core-express-connect
+
 jobs:
 - job: BuildPiImage
 
@@ -65,6 +75,30 @@ jobs:
       ls -lh stage2/04-firstboot/files
 
     displayName: Copy DEBs Into Pi-Gen
+
+  - script: |
+
+      sed \
+        -e 's|@PRODUCT@|${{ parameters.product }}|g' \
+        stage2/04-firstboot/files/first-boot.sh.in \
+        > stage2/04-firstboot/files/first-boot.sh
+
+      chmod +x stage2/04-firstboot/files/first-boot.sh
+
+      echo "Generated script:"
+      cat stage2/04-firstboot/files/first-boot.sh
+
+    displayName: Generate First Boot Script
+
+  - script: |
+
+      sed \
+        -e 's|@HOSTNAME@|${{ parameters.hostname }}|g' \
+        -e 's|@USERNAME@|$(PI_USERNAME)|g' \
+        -e 's|@PASSWORD@|$(PI_PASSWORD)|g' \
+        config.in > config
+
+    displayName: Generate Pi-Gen Config
 
   #
   # Build image

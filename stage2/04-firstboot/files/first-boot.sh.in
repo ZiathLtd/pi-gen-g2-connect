@@ -48,13 +48,13 @@ fi
 # ---------------------------------------------------------------
 CURRENT_STAGE="Installing azenta-core"
 log 2 "$CURRENT_STAGE"
-dpkg -i /opt/azenta-debs/azenta-core*.deb
+dpkg -i /opt/azenta-debs/@PRODUCT@_*.deb
 systemctl daemon-reload          # make sure systemd sees the unit the deb just installed
 
 # ---------------------------------------------------------------
-CURRENT_STAGE="Waiting for cube-connect install service"
+CURRENT_STAGE="Waiting for install service"
 log 3 "$CURRENT_STAGE"
-SERVICE_NAME="azenta-core-cube-connect-install.service"
+SERVICE_NAME="@PRODUCT@-install.service"
 
 if systemctl cat "$SERVICE_NAME" >/dev/null 2>&1; then
     info "Starting $SERVICE_NAME and waiting for it to finish..."
