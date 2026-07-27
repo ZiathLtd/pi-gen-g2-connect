@@ -24,6 +24,11 @@ jobs:
 
   steps:
 
+  - script: |
+      sudo rm -rf $(Build.SourcesDirectory)/work
+      sudo rm -rf $(Build.SourcesDirectory)/deploy
+    displayName: Cleanup Previous Pi-Gen Build
+
   - checkout: self
     clean: true
 
