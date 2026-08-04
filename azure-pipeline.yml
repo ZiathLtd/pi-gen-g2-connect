@@ -75,6 +75,10 @@ jobs:
 
       mkdir -p stage2/04-firstboot/files
 
+      echo "Removing existing DEBs..."
+      
+      rm -f stage2/04-firstboot/files/*.deb
+
       find $(Pipeline.Workspace)/g2core -name "*.deb" -exec cp -v {} stage2/04-firstboot/files/ \;
 
       find $(Pipeline.Workspace)/firmware -name "*.deb" -exec cp -v {} stage2/04-firstboot/files/ \;
