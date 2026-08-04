@@ -46,6 +46,10 @@ jobs:
   - script: |
       sudo rm -rf $(Build.SourcesDirectory)/work
       sudo rm -rf $(Build.SourcesDirectory)/deploy
+      sudo rm -rf "$(Pipeline.Workspace)/g2core"
+      sudo rm -rf "$(Pipeline.Workspace)/firmware"
+      mkdir -p "$(Pipeline.Workspace)/g2core"
+      mkdir -p "$(Pipeline.Workspace)/firmware"
     displayName: Cleanup Previous Pi-Gen Build
 
   - checkout: self
