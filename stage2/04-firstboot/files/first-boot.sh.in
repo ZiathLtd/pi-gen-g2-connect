@@ -71,13 +71,13 @@ fi
 # ---------------------------------------------------------------
 CURRENT_STAGE="Installing azenta-server"
 log 4 "$CURRENT_STAGE"
-dpkg -i /opt/azenta-debs/azenta-server*.deb
+dpkg -i /opt/azenta-debs/azenta-server*.debk
 # ---------------------------------------------------------------
 
 CURRENT_STAGE="Cleanup + reboot"
 log 5 "$CURRENT_STAGE"
 rm -f /etc/first-boot.sh
-systemctl disable first-boot.service || true
+systemctl disable first-boot.services || true
 
 log "OK" "First boot setup complete"
 reboot
