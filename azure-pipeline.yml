@@ -1,0 +1,146 @@
+trigger: none
+
+resources:
+  pipelines:
+
+  - pipeline: g2core
+    source: ZiathLtd.g2-core
+    trigger: none
+
+  - pipeline: firmware
+    source: ZiathLtd.reader-g2-firmware
+    trigger: none
+
+variables:
+- group: G2-USER
+
+parameters:
+
+- name: hostname
+  displayName: Hostname
+  type: string
+  default: NO-SERIAL
+
+- name: product
+  displayName: Product
+  type: string
+  default: azenta-core-cube-connect
+  values:
+  - azenta-core-mirage-connect
+  - azenta-core-cube-connect
+  - azenta-core-express-connect
+
+jobs:
+- job: BuildPiImage
+  timeoutInMinutes: 120
+  displayName: Build Pi Image
+
+  pool:
+    name: Default
+    demands:
+      - Agent.OS -equals Linux
+      - Agent.Name -equals bookworm-agent
+
+  steps:
+
+  - script: |
+      sudo rm -rf $(Build.SourcesDirectory)/work
+      sudo rm -rf $(Build.SourcesDirectory)/deploy
+      sudo rm -rf "$(Pipeline.Workspace)/g2core"
+      sudo rm -rf "$(Pipeline.Workspace)/firmware"
+      mkdir -p "$(Pipeline.Workspace)/g2core"
+      mkdir -p "$(Pipeline.Workspace)/firmware"
+    displayName: Cleanup Previous Pi-Gen Build
+
+  - checkout: self
+    clean: true
+
+  #
+  # Download selected pipeline artifacts
+  #
+  - download: g2core
+    artifact: DEBIAN
+
+  - download: firmware
+    artifact: DEBIAN
+
+  #
+  # Verify what was downloaded
+  #
+  - script: |
+      echo "Pipeline workspace:"
+      find $(Pipeline.Workspace) -type f
+    displayName: Show Downloaded Files
+
+  #
+  # Copy DEBs into pi-gen
+  #
+  - script: |
+
+      mkdir -p stage2/04-firstboot/files
+
+      echo "Removing existing DEBs..."
+      
+      rm -f stage2/04-firstboot/files/*.deb
+
+      find $(Pipeline.Workspace)/g2core -name "*.deb" -exec cp -v {} stage2/04-firstboot/files/ \;
+
+      find $(Pipeline.Workspace)/firmware -name "*.deb" -exec cp -v {} stage2/04-firstboot/files/ \;
+
+      echo ""
+      echo "Files in stage2/04-firstboot/files:"
+      ls -lh stage2/04-firstboot/files
+
+    displayName: Copy DEBs Into Pi-Gen
+
+  - script: |
+
+      sed \
+        -e 's|@PRODUCT@|${{ parameters.product }}|g' \
+        stage2/04-firstboot/files/first-boot.sh.in \
+        > stage2/04-firstboot/files/first-boot.sh
+
+      chmod +x stage2/04-firstboot/files/first-boot.sh
+
+      echo "Generated script:"
+      cat stage2/04-firstboot/files/first-boot.sh
+
+    displayName: Generate First Boot Script
+
+  - script: |
+
+      sed \
+        -e 's|@HOSTNAME@|${{ parameters.hostname }}|g' \
+        -e 's|@USERNAME@|$(PI_USERNAME)|g' \
+        -e 's|@PASSWORD@|$(PI_PASSWORD)|g' \
+        config.in > config
+
+    displayName: Generate Pi-Gen Config
+
+  #
+  # Build image
+  #
+  - script: |
+
+      chmod +x build.sh
+
+      sudo ./build.sh
+
+    displayName: Build Image
+
+  #
+  # Verify image
+  #
+  - script: |
+      echo "Generated images:"
+      find deploy -type f
+    displayName: Verify Image
+
+  #
+  # Publish image
+  #
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: deploy
+      artifact: IMAGE
+    displayName: Publish Image
